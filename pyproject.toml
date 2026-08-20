@@ -1,0 +1,28 @@
+[project]
+name = "rl-mini-games"
+version = "0.1.0"
+description = "Reinforcement learning from scratch: Q-learning on Tic-Tac-Toe, PPO on Connect 4"
+requires-python = ">=3.13"
+dependencies = [
+    "torch>=2.0.0",
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 100
+target-version = ["py313"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
