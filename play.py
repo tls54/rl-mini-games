@@ -73,16 +73,17 @@ def load_agent(checkpoint):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["human", "agent"], default="human")
-    parser.add_argument("--checkpoint", default=None, help="path to a trained QAgent q_table.pkl; omit for a random agent")
+    parser.add_argument("--checkpoint", default=None, help="path to a trained QAgent q_table.pkl; omit for a random agent (human mode)")
+    parser.add_argument("--checkpoint-a", default=None, help="path to player 1's q_table.pkl; omit for a random agent (agent mode)")
+    parser.add_argument("--checkpoint-b", default=None, help="path to player -1's q_table.pkl; omit for a random agent (agent mode)")
     args = parser.parse_args()
 
     env = TicTacToe()
-    agent = load_agent(args.checkpoint)
 
     if args.mode == "human":
-        play_human_vs_agent(env, agent)
+        play_human_vs_agent(env, load_agent(args.checkpoint))
     else:
-        play_agent_vs_agent(env, agent, load_agent(args.checkpoint))
+        play_agent_vs_agent(env, load_agent(args.checkpoint_a), load_agent(args.checkpoint_b))
 
 
 if __name__ == "__main__":
