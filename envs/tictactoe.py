@@ -51,7 +51,7 @@ class TicTacToe:
             elif v == -1:
                 pretty_board.append('o')
             else:
-                pretty_board.append(i) 
+                pretty_board.append(str(i))
 
         pretty_board = np.array(pretty_board)
 
