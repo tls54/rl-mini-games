@@ -2,6 +2,7 @@ import argparse
 
 from envs.tictactoe import TicTacToe
 from agents.random_agent import RandomAgent
+from agents.QAgent import QAgent
 
 SYMBOLS = {1: "x", -1: "o"}
 
@@ -61,17 +62,27 @@ def play_agent_vs_agent(env, agent_a, agent_b):
         print("Draw!")
 
 
+def load_agent(checkpoint):
+    if checkpoint is None:
+        return RandomAgent()
+    agent = QAgent()
+    agent.load(checkpoint)
+    return agent
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["human", "agent"], default="human")
+    parser.add_argument("--checkpoint", default=None, help="path to a trained QAgent q_table.pkl; omit for a random agent")
     args = parser.parse_args()
 
     env = TicTacToe()
+    agent = load_agent(args.checkpoint)
 
     if args.mode == "human":
-        play_human_vs_agent(env, RandomAgent())
+        play_human_vs_agent(env, agent)
     else:
-        play_agent_vs_agent(env, RandomAgent(), RandomAgent())
+        play_agent_vs_agent(env, agent, load_agent(args.checkpoint))
 
 
 if __name__ == "__main__":

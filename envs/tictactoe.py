@@ -60,13 +60,3 @@ class TicTacToe:
     @property
     def current_player(self):
         return self.player
-
-
-
-
-# Testing snippet
-tictactoe = TicTacToe()
-actions = tictactoe.legal_actions()
-
-
-print(actions) 
