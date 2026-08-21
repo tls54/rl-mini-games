@@ -9,6 +9,7 @@ class TicTacToe:
 
     def reset(self):
         self.board = np.zeros(9, dtype=int)
+        self.player = int(1)
         self.game_over = False
         return self.board.copy()
 

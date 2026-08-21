@@ -3,6 +3,7 @@ import argparse
 from envs.tictactoe import TicTacToe
 from agents.random_agent import RandomAgent
 from agents.QAgent import QAgent
+from agents.minimax_agent import MinimaxAgent
 
 SYMBOLS = {1: "x", -1: "o"}
 
@@ -63,8 +64,10 @@ def play_agent_vs_agent(env, agent_a, agent_b):
 
 
 def load_agent(checkpoint):
-    if checkpoint is None:
+    if checkpoint is None or checkpoint == "random":
         return RandomAgent()
+    if checkpoint == "minimax":
+        return MinimaxAgent()
     agent = QAgent()
     agent.load(checkpoint)
     return agent
@@ -73,9 +76,9 @@ def load_agent(checkpoint):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["human", "agent"], default="human")
-    parser.add_argument("--checkpoint", default=None, help="path to a trained QAgent q_table.pkl; omit for a random agent (human mode)")
-    parser.add_argument("--checkpoint-a", default=None, help="path to player 1's q_table.pkl; omit for a random agent (agent mode)")
-    parser.add_argument("--checkpoint-b", default=None, help="path to player -1's q_table.pkl; omit for a random agent (agent mode)")
+    parser.add_argument("--checkpoint", default=None, help="path to a trained QAgent q_table.pkl, or 'minimax'/'random'; omit for a random agent (human mode)")
+    parser.add_argument("--checkpoint-a", default=None, help="path to player 1's q_table.pkl, or 'minimax'/'random'; omit for a random agent (agent mode)")
+    parser.add_argument("--checkpoint-b", default=None, help="path to player -1's q_table.pkl, or 'minimax'/'random'; omit for a random agent (agent mode)")
     args = parser.parse_args()
 
     env = TicTacToe()

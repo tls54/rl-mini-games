@@ -1,5 +1,6 @@
 import pickle
 import random
+from utils.symmetry import canonical, invert
 
 class QAgent:
     def __init__(self, q_table=None, alpha=0.1, gamma=0.9):
@@ -20,9 +21,13 @@ class QAgent:
         if random.random() < epsilon:
             return random.choice(legal_actions)
 
-        key = tuple(int(x) for x in state)
+        canon_state, transform = canonical(state)
+        inv = invert(transform)                    # shape (9,)
+        key = tuple(int(x) for x in canon_state)
+
         action_values = self.q_table.get(key, {})
-        values = {a: action_values.get(a, 0.0) for a in legal_actions}
+        values = {a: action_values.get(int(inv[a]), 0.0) for a in legal_actions}
+
         best = max(values.values())
         choices = [a for a, v in values.items() if v == best]
 
@@ -32,13 +37,18 @@ class QAgent:
 
 
     def update(self, state, action, next_legal_action, reward, next_state, done):
-        key = tuple(int(x) for x in state)
-        current_estimate = self.q_table.get(key, {}).get(action, 0.0)
+        canon_state, transform = canonical(state)
+        inv = invert(transform)
+        key = tuple(int(x) for x in canon_state)
+
+        current_estimate = self.q_table.get(key, {}).get(int(inv[action]), 0.0)
 
         if not done: 
-            next_key = tuple(int(x) for x in next_state)
+            next_canon_state, next_transform = canonical(next_state)
+            next_key = tuple(int(x) for x in next_canon_state)
+            next_inv = invert(next_transform)
             next_action_values = self.q_table.get(next_key, {})
-            values = {a: next_action_values.get(a, 0.0) for a in next_legal_action}
+            values = {a: next_action_values.get(int(next_inv[a]), 0.0) for a in next_legal_action}
 
             best_next = max(values.values())
 
@@ -50,7 +60,7 @@ class QAgent:
 
         new_estimate = current_estimate + self.alpha * (target - current_estimate)
 
-        self.q_table.setdefault(key, {})[action] = new_estimate
+        self.q_table.setdefault(key, {})[int(inv[action])] = new_estimate
 
 
 # Dummy table, just to see the shape:
