@@ -5,6 +5,7 @@ from pathlib import Path
 
 from agents.QAgent import QAgent
 from agents.random_agent import RandomAgent
+from agents.minimax_agent import MinimaxAgent
 from envs.tictactoe import TicTacToe
 from utils.evaluate import evaluate
 
@@ -35,15 +36,57 @@ def run_episode(env, agent, epsilon, loss_reward, draw_reward):
             agent.update(remaining_state, remaining_action, env.legal_actions(), remaining_reward, next_state=state, done=True)
 
 
-def train(episodes, epsilon, alpha, gamma, loss_reward, draw_reward, eval_every, eval_games, run_name):
+def run_episode_vs_opponent(env, agent, opponent, agent_player, epsilon, loss_reward, draw_reward):
+    """Like run_episode, but only `agent` learns - `opponent` (e.g. MinimaxAgent)
+    is fixed and never gets update() called on it. Only one pending transition
+    is needed since only one side is ever waiting to be resolved."""
+    done = False
+    env.reset()
+    pending = None
+
+    while not done:
+        player = env.current_player
+        state = env.board.copy()
+
+        if player == agent_player:
+            action = agent.choose_action(state, env.legal_actions(), epsilon)
+        else:
+            action = opponent.choose_action(state, env.legal_actions(), epsilon=0.0)
+
+        if player == agent_player and pending is not None:
+            prev_state, prev_action = pending
+            agent.update(prev_state, prev_action, env.legal_actions(), reward=0, next_state=state, done=False)
+
+        next_state, reward, done, info = env.step(action)
+
+        if player == agent_player:
+            pending = (state, action)
+
+        if done:
+            if player == agent_player:
+                # agent made the game-ending move - resolve immediately with the real reward
+                agent.update(state, action, env.legal_actions(), reward=reward, next_state=next_state, done=True)
+            elif pending is not None:
+                # opponent ended the game - agent's last move gets the opposite outcome
+                remaining_reward = loss_reward if reward == 1 else draw_reward
+                remaining_state, remaining_action = pending
+                agent.update(remaining_state, remaining_action, env.legal_actions(), remaining_reward, next_state=state, done=True)
+
+
+def train(episodes, epsilon, alpha, gamma, loss_reward, draw_reward, eval_every, eval_games, run_name, opponent="self"):
     env = TicTacToe()
     agent = QAgent(alpha=alpha, gamma=gamma)
     baseline = RandomAgent()
+    fixed_opponent = MinimaxAgent() if opponent == "minimax" else None
 
     eval_history = []
 
     for episode in range(1, episodes + 1):
-        run_episode(env, agent, epsilon, loss_reward, draw_reward)
+        if fixed_opponent is None:
+            run_episode(env, agent, epsilon, loss_reward, draw_reward)
+        else:
+            agent_player = 1 if episode % 2 == 1 else -1
+            run_episode_vs_opponent(env, agent, fixed_opponent, agent_player, epsilon, loss_reward, draw_reward)
 
         if eval_every and episode % eval_every == 0:
             metrics = evaluate(agent, baseline, env, n_games=eval_games)
@@ -70,6 +113,7 @@ def train(episodes, epsilon, alpha, gamma, loss_reward, draw_reward, eval_every,
         "draw_reward": draw_reward,
         "eval_every": eval_every,
         "eval_games": eval_games,
+        "opponent": opponent,
         "eval_history": eval_history,
     }
     with open(run_dir / "config.json", "w") as f:
@@ -90,6 +134,7 @@ def main():
     parser.add_argument("--eval-every", type=int, default=1000)
     parser.add_argument("--eval-games", type=int, default=200)
     parser.add_argument("--run-name", default=None)
+    parser.add_argument("--opponent", choices=["self", "minimax"], default="self")
     args = parser.parse_args()
 
     run_name = args.run_name or time.strftime("%Y%m%d-%H%M%S")
@@ -104,6 +149,7 @@ def main():
         eval_every=args.eval_every,
         eval_games=args.eval_games,
         run_name=run_name,
+        opponent=args.opponent,
     )
 
 
