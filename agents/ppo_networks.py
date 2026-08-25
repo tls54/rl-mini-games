@@ -32,3 +32,29 @@ class PiTheta(nn.Module):
         x = x.masked_fill(mask, float('-inf'))
 
         return x
+
+
+class CriticNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(2, 6, 3, padding='same')
+        self.conv2 = nn.Conv2d(6, 12, 3, padding='same')
+        self.conv3 = nn.Conv2d(12, 24, 3, padding='same')
+        self.fc1 = nn.Linear(24 * 6 * 7, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 16)
+        self.fc4 = nn.Linear(16, 1)
+
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+
+        x = torch.flatten(x, 1)
+        
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        x = self.fc4(x)
+
+        return x
