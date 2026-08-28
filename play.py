@@ -2,8 +2,8 @@ import argparse
 
 from envs.tictactoe import TicTacToe
 from agents.random_agent import RandomAgent
-from agents.QAgent import QAgent
-from agents.minimax_agent import MinimaxAgent
+from agents.tictactoe.QAgent import QAgent
+from agents.tictactoe.minimax_agent import MinimaxAgent
 
 SYMBOLS = {1: "x", -1: "o"}
 

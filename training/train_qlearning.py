@@ -3,9 +3,9 @@ import json
 import time
 from pathlib import Path
 
-from agents.QAgent import QAgent
+from agents.tictactoe.QAgent import QAgent
 from agents.random_agent import RandomAgent
-from agents.minimax_agent import MinimaxAgent
+from agents.tictactoe.minimax_agent import MinimaxAgent
 from envs.tictactoe import TicTacToe
 from utils.evaluate import evaluate
 
