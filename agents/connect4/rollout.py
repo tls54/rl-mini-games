@@ -3,6 +3,7 @@ import numpy as np
 
 from torch.distributions import Categorical
 
+from agents.connect4.ppo_agent import PiTheta, CriticNet
 from envs.connect4 import Connect4
 from utils.device import get_device
 
@@ -22,7 +23,7 @@ class RolloutCollector:
         self.device = get_device() 
 
 
-    def collect(self, actor, critic, num_steps=2048):
+    def collect(self, actor:PiTheta, critic:CriticNet, num_steps=2048):
         actor.to(self.device)
         critic.to(self.device)
 
@@ -63,5 +64,12 @@ class RolloutCollector:
                 else:
                     self.last_idx_per_env[env_idx] = idx
 
-        return states, actions, log_probs, rewards, dones, values
+        final_board_states = [encode_board_states(env) for env in self.envs]
+        final_stacked = np.stack([np.stack(bs, axis=0) for bs in final_board_states], axis=0)
+        final_tensor = torch.from_numpy(final_stacked).float().to(device=self.device)
+
+        bootstrap_values = critic.forward(final_tensor)
+        bootstrap_values = bootstrap_values.detach()
+
+        return states, actions, log_probs, rewards, dones, values, bootstrap_values
 
