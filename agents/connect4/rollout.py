@@ -47,10 +47,10 @@ class RolloutCollector:
 
                 states.append(board_states_per_env[env_idx])
                 actions.append(action)
-                log_probs.append(batch_log_probs[env_idx])
+                log_probs.append(batch_log_probs[env_idx].detach())
                 rewards.append(reward)
                 dones.append(done)
-                values.append(batch_values[env_idx])
+                values.append(batch_values[env_idx].detach())
 
                 if done:
                     if self.last_idx_per_env[env_idx] is not None:
