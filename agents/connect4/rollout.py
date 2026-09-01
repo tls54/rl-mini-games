@@ -27,6 +27,8 @@ class RolloutCollector:
         actor.to(self.device)
         critic.to(self.device)
 
+        self.last_idx_per_env = [None] * len(self.envs)
+
         states, actions, log_probs, rewards, dones, values = [], [], [], [], [], []
 
         for i in range(int(num_steps / len(self.envs))):

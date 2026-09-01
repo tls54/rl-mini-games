@@ -1,6 +1,12 @@
 import numpy as np
 
-def calc_gae(rewards, values, dones, bootstrap_values, num_envs, gamma, lambda_value):
+def calc_gae(rewards, 
+            values, 
+            dones, 
+            bootstrap_values, 
+            num_envs, 
+            gamma=0.99, 
+            lambda_value=0.95):
     
     rewards = np.array(rewards)
     bootstrap_values = bootstrap_values.reshape(1, num_envs)
@@ -16,5 +22,5 @@ def calc_gae(rewards, values, dones, bootstrap_values, num_envs, gamma, lambda_v
         advantages[t] = running_gae
 
     V_target_t = advantages + values[:-1]
-    
+
     return advantages, V_target_t

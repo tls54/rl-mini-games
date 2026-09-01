@@ -1,29 +1,40 @@
 import torch
 import numpy as np
-from torch.optim import Optimizer
+from torch.optim import Optimizer, Adam
 from torch.distributions import Categorical
 
 from agents.connect4.gae import calc_gae
 from agents.connect4.ppo_networks import PiTheta, CriticNet
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
 
 @dataclass
 class ActorParams:
     actor: PiTheta
-    optimizer: Optimizer
     learning_rate: float
+    optimizer_cls: type[Optimizer] = Adam   # defaults to Adam, but swappable
+    optimizer: Optimizer = field(init=False)
+
+    def __post_init__(self):
+        self.optimizer = self.optimizer_cls(self.actor.parameters(), lr=self.learning_rate)
+
 
 
 @dataclass
 class CriticParams:
     critic: CriticNet
-    optimizer: Optimizer
     learning_rate: float
+    optimizer_cls: type[Optimizer] = Adam   # defaults to Adam, but swappable
+    optimizer: Optimizer = field(init=False)
+
+    def __post_init__(self):
+        self.optimizer = self.optimizer_cls(self.critic.parameters(), lr=self.learning_rate)
+
 
 
 class PPOAgent:
-    def __init__(self, actor: ActorParams, critic: CriticParams):
+    def __init__(self, actor:ActorParams, critic:CriticParams):
         self.actor = actor.actor
         self.critic = critic.critic
         self.actor_optimizer = actor.optimizer
