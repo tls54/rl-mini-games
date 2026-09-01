@@ -4,6 +4,7 @@ from agents.random_agent import RandomAgent
 from agents.tictactoe.QAgent import QAgent
 from agents.tictactoe.minimax_agent import MinimaxAgent
 from agents.connect4.ppo_eval_agent import PPOPlayer
+from agents.connect4.alphabeta_agent import AlphaBetaAgent
 from utils.checkpoints import list_tictactoe_checkpoints, list_connect4_checkpoints, load_connect4_actor
 
 SYMBOLS = {1: "x", -1: "o"}
@@ -42,7 +43,7 @@ def select_opponent(game, label):
         checkpoints = list_tictactoe_checkpoints()
         options += [(str(p.relative_to("checkpoints/tictactoe")), p / "q_table.pkl") for p in checkpoints]
     else:
-        options = [("Random", "random")]
+        options = [("Random", "random"), ("Alpha-Beta", "alphabeta")]
         checkpoints = list_connect4_checkpoints()
         options += [(str(p.relative_to("checkpoints/connect4/foundations")), p) for p in checkpoints]
 
@@ -55,6 +56,8 @@ def load_agent(game, choice):
         return RandomAgent()
     if choice == "minimax":
         return MinimaxAgent()
+    if choice == "alphabeta":
+        return AlphaBetaAgent()
 
     if game == "tictactoe":
         agent = QAgent()
