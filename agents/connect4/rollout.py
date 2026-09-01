@@ -6,12 +6,10 @@ from torch.distributions import Categorical
 from agents.connect4.ppo_agent import PiTheta, CriticNet
 from envs.connect4 import Connect4
 from utils.device import get_device
+from agents.connect4.encoding import encode_board_state
 
 def encode_board_states(env:Connect4):
-    player = env.current_player
-    player_state = (env.board == player).astype(int)
-    opponent_state = (env.board == -player).astype(int)
-    return player_state, opponent_state
+    return encode_board_state(env.board, env.current_player)
 
 
 

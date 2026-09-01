@@ -99,7 +99,7 @@ def train(episodes, epsilon, alpha, gamma, loss_reward, draw_reward, eval_every,
                 f"loss {metrics['loss_rate']:.2f}"
             )
 
-    run_dir = Path("checkpoints") / run_name
+    run_dir = Path("checkpoints/tictactoe") / run_name
     run_dir.mkdir(parents=True, exist_ok=True)
 
     agent.save(run_dir / "q_table.pkl")

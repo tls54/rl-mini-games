@@ -37,6 +37,16 @@ def latest_checkpoint_dir(foundation_name):
     return max(steps, key=lambda pair: pair[0])[1]
 
 
+def parse_int_list(s):
+    return tuple(int(x) for x in s.split(","))
+
+
+def load_foundation_config(foundation_name):
+    path = foundation_dir(foundation_name) / "foundation_config.json"
+    with open(path) as f:
+        return json.load(f)
+
+
 def save_foundation_config(foundation_name, args):
     fdir = foundation_dir(foundation_name)
     fdir.mkdir(parents=True, exist_ok=True)
@@ -48,6 +58,10 @@ def save_foundation_config(foundation_name, args):
         "lambda_value": args.lam,
         "eps": args.eps,
         "opponent": args.opponent,
+        "actor_conv_channels": list(args.actor_conv_channels),
+        "actor_fc_hidden": list(args.actor_fc_hidden),
+        "critic_conv_channels": list(args.critic_conv_channels),
+        "critic_fc_hidden": list(args.critic_fc_hidden),
     }
     with open(fdir / "foundation_config.json", "w") as f:
         json.dump(config, f, indent=2)
@@ -81,24 +95,44 @@ def load_checkpoint(ckpt_dir, actor_params, critic_params):
 
 
 def train(args):
-    actor_params = ActorParams(actor=PiTheta(), optimizer_cls=Adam, learning_rate=args.actor_lr)
-    critic_params = CriticParams(critic=CriticNet(), optimizer_cls=Adam, learning_rate=args.critic_lr)
+    ckpt_dir = latest_checkpoint_dir(args.foundation_name) if args.resume else None
+
+    if ckpt_dir is not None:
+        # architecture must match the saved weights - read it from the foundation's
+        # own config rather than trusting whatever CLI flags were passed this run
+        fconfig = load_foundation_config(args.foundation_name)
+        actor_conv_channels = tuple(fconfig["actor_conv_channels"])
+        actor_fc_hidden = tuple(fconfig["actor_fc_hidden"])
+        critic_conv_channels = tuple(fconfig["critic_conv_channels"])
+        critic_fc_hidden = tuple(fconfig["critic_fc_hidden"])
+    else:
+        if args.resume:
+            print(f"--resume set but no checkpoints found for '{args.foundation_name}', starting fresh")
+        actor_conv_channels = args.actor_conv_channels
+        actor_fc_hidden = args.actor_fc_hidden
+        critic_conv_channels = args.critic_conv_channels
+        critic_fc_hidden = args.critic_fc_hidden
+        save_foundation_config(args.foundation_name, args)
+
+    actor_params = ActorParams(
+        actor=PiTheta(conv_channels=actor_conv_channels, fc_hidden_sizes=actor_fc_hidden),
+        optimizer_cls=Adam,
+        learning_rate=args.actor_lr,
+    )
+    critic_params = CriticParams(
+        critic=CriticNet(conv_channels=critic_conv_channels, fc_hidden_sizes=critic_fc_hidden),
+        optimizer_cls=Adam,
+        learning_rate=args.critic_lr,
+    )
     agent = PPOAgent(actor=actor_params, critic=critic_params)
     collector = RolloutCollector(num_envs=args.num_envs)
 
     total_steps_done = 0
 
-    if args.resume:
-        ckpt_dir = latest_checkpoint_dir(args.foundation_name)
-        if ckpt_dir is None:
-            print(f"--resume set but no checkpoints found for '{args.foundation_name}', starting fresh")
-            save_foundation_config(args.foundation_name, args)
-        else:
-            config = load_checkpoint(ckpt_dir, actor_params, critic_params)
-            total_steps_done = config["step"]
-            print(f"resumed from {ckpt_dir} (step {total_steps_done})")
-    else:
-        save_foundation_config(args.foundation_name, args)
+    if ckpt_dir is not None:
+        config = load_checkpoint(ckpt_dir, actor_params, critic_params)
+        total_steps_done = config["step"]
+        print(f"resumed from {ckpt_dir} (step {total_steps_done})")
 
     total_loops = args.total_steps // args.num_steps
 
@@ -167,6 +201,10 @@ def main():
     parser.add_argument("--eps", type=float, default=0.2)
     parser.add_argument("--opponent", choices=["self"], default="self")
     parser.add_argument("--checkpoint-every", type=int, default=5)
+    parser.add_argument("--actor-conv-channels", type=parse_int_list, default=(2, 6, 12, 24))
+    parser.add_argument("--actor-fc-hidden", type=parse_int_list, default=(128, 64))
+    parser.add_argument("--critic-conv-channels", type=parse_int_list, default=(2, 6, 12, 24))
+    parser.add_argument("--critic-fc-hidden", type=parse_int_list, default=(128, 64, 16))
     args = parser.parse_args()
 
     train(args)

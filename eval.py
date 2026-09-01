@@ -1,26 +1,30 @@
-import argparse
-
-from envs.tictactoe import TicTacToe
-from play import load_agent
+from play import select_game, make_env, select_opponent, prompt_choice
 from utils.evaluate import evaluate
 
 
+def prompt_int(prompt, default):
+    raw = input(f"{prompt} [{default}]: ").strip()
+    if not raw:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        print("Enter a whole number, using default.")
+        return default
+
+
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--checkpoint-a", default=None, help="path to agent A's q_table.pkl; omit for a random agent")
-    parser.add_argument("--checkpoint-b", default=None, help="path to agent B's q_table.pkl; omit for a random agent")
-    parser.add_argument("--games", type=int, default=500)
-    args = parser.parse_args()
+    game = select_game()
+    env = make_env(game)
 
-    env = TicTacToe()
-    agent_a = load_agent(args.checkpoint_a)
-    agent_b = load_agent(args.checkpoint_b)
+    agent_a = select_opponent(game, "agent A")
+    agent_b = select_opponent(game, "agent B")
 
-    metrics = evaluate(agent_a, agent_b, env, n_games=args.games)
+    games = prompt_int("Number of games", 200)
 
-    print(f"A: {args.checkpoint_a or 'random'}")
-    print(f"B: {args.checkpoint_b or 'random'}")
-    print(f"over {args.games} games (sides alternated):")
+    metrics = evaluate(agent_a, agent_b, env, n_games=games)
+
+    print(f"\nover {games} games (sides alternated):")
     print(f"  A win rate:  {metrics['win_rate']:.3f}")
     print(f"  draw rate:   {metrics['draw_rate']:.3f}")
     print(f"  A loss rate: {metrics['loss_rate']:.3f}")

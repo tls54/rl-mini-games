@@ -14,7 +14,7 @@ def evaluate(agent, opponent, env, n_games=200):
 
         while not done:
             mover = env.current_player
-            action = agents[mover].choose_action(state, env.legal_actions(), epsilon=0.0)
+            action = agents[mover].choose_action(state, env.legal_actions(), current_player=mover, epsilon=0.0)
             state, reward, done, info = env.step(action)
 
         if reward == 0:

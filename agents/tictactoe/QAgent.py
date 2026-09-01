@@ -17,7 +17,7 @@ class QAgent:
             self.q_table = pickle.load(f)
 
 
-    def choose_action(self, state, legal_actions, epsilon=0.0):
+    def choose_action(self, state, legal_actions, current_player=None, epsilon=0.0):
         if random.random() < epsilon:
             return random.choice(legal_actions)
 

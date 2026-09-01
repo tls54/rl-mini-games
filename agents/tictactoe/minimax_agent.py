@@ -57,7 +57,7 @@ class MinimaxAgent:
     """Plays perfect TicTacToe. epsilon is accepted for interface compatibility
     but ignored - this agent never explores."""
 
-    def choose_action(self, state, legal_actions, epsilon=0.0):
+    def choose_action(self, state, legal_actions, current_player=None, epsilon=0.0):
         board = tuple(int(x) for x in state)
         player = _current_player(board)
 
